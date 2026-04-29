@@ -1,35 +1,36 @@
 import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import dotenv from 'dotenv';
 
-let mongoServer;
+// Load environment variables from .env file
+dotenv.config();
 
 /**
- * Initializes and connects to an in-memory MongoDB instance.
- * This is useful for zero-setup execution and testing.
+ * Connects to MongoDB Atlas using the URI provided in environment variables.
+ * This replaces the previous in-memory server for production use.
  */
 export const connectDB = async () => {
   try {
-    // Spin up the in-memory mongodb instance
-    mongoServer = await MongoMemoryServer.create();
-    const uri = mongoServer.getUri();
+    const uri = process.env.MONGODB_URI;
     
-    // Connect mongoose to the in-memory URI
+    if (!uri) {
+      throw new Error("MONGODB_URI is not defined in the .env file.");
+    }
+
     await mongoose.connect(uri);
-    console.log(`MongoDB successfully connected to in-memory server: ${uri}`);
+    console.log('Successfully connected to MongoDB Atlas');
   } catch (error) {
-    console.error('MongoDB connection error:', error);
+    console.error('MongoDB connection error:', error.message);
+    // Exit process with failure if DB connection is essential
     process.exit(1);
   }
 };
 
 /**
- * Disconnects from the database and stops the in-memory server.
+ * Disconnects from the database.
  */
 export const disconnectDB = async () => {
   if (mongoose.connection) {
     await mongoose.connection.close();
-  }
-  if (mongoServer) {
-    await mongoServer.stop();
+    console.log('MongoDB connection closed');
   }
 };
