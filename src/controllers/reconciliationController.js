@@ -1,19 +1,32 @@
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
+import fs from 'fs';
 import { createObjectCsvStringifier } from 'csv-writer';
 import ReconciliationRun from '../models/ReconciliationRun.js';
 import ReconciliationResult from '../models/ReconciliationResult.js';
 import IngestionService from '../services/IngestionService.js';
 import MatchingEngineService from '../services/MatchingEngineService.js';
 
-// Hardcoded paths for the assignment, assuming they run from project root
-const USER_CSV_PATH = path.join(import.meta.dirname, '../../user_transactions.csv');
-const EXCHANGE_CSV_PATH = path.join(import.meta.dirname, '../../exchange_transactions.csv');
+// Hardcoded fallback paths for the assignment if no files are uploaded
+const DEFAULT_USER_CSV_PATH = path.join(import.meta.dirname, '../../user_transactions.csv');
+const DEFAULT_EXCHANGE_CSV_PATH = path.join(import.meta.dirname, '../../exchange_transactions.csv');
 
 export const triggerReconciliation = async (req, res) => {
   try {
     const { timeToleranceMins = 5, quantityTolerancePercent = 0.01 } = req.body;
     const runId = uuidv4();
+
+    // Extract file paths from multer req.files
+    let userFilePath = DEFAULT_USER_CSV_PATH;
+    let exchangeFilePath = DEFAULT_EXCHANGE_CSV_PATH;
+
+    if (req.files && req.files['userFile'] && req.files['userFile'][0]) {
+      userFilePath = req.files['userFile'][0].path;
+    }
+    
+    if (req.files && req.files['exchangeFile'] && req.files['exchangeFile'][0]) {
+      exchangeFilePath = req.files['exchangeFile'][0].path;
+    }
 
     // Create a run record
     await ReconciliationRun.create({
@@ -22,10 +35,18 @@ export const triggerReconciliation = async (req, res) => {
     });
 
     // 1. Ingestion
-    await IngestionService.process(runId, USER_CSV_PATH, EXCHANGE_CSV_PATH);
+    await IngestionService.process(runId, userFilePath, exchangeFilePath);
 
     // 2. Matching
     const { summary } = await MatchingEngineService.runMatching(runId);
+
+    // 3. Clean up uploaded files if they are not the default ones
+    if (userFilePath !== DEFAULT_USER_CSV_PATH) {
+      fs.unlinkSync(userFilePath);
+    }
+    if (exchangeFilePath !== DEFAULT_EXCHANGE_CSV_PATH) {
+      fs.unlinkSync(exchangeFilePath);
+    }
 
     return res.status(200).json({
       message: 'Reconciliation completed successfully',

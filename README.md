@@ -1,76 +1,72 @@
 # Transaction Reconciliation Engine
 
-A robust Node.js and Express based system to ingest, match, and reconcile cryptocurrency transaction datasets from users and exchanges.
+A full-stack solution to ingest, match, and reconcile cryptocurrency transaction datasets from users and exchanges. It features a robust Node.js backend API and a sleek, modern Next.js frontend interface.
 
-## Features
+## System Architecture
 
-- **Ingestion Pipeline**: Parses raw CSVs from multiple sources.
-- **Data Quality Handling**: Instead of silently dropping bad rows (e.g., negative quantities, missing timestamps), the ingestion engine flags them and logs the specific issue in the database.
-- **Configurable Matching Engine**: Matches transactions based on configurable time window tolerances and quantity percentage tolerances.
-- **Type Equivalency Mapping**: Automatically maps perspective-based types (e.g., User `TRANSFER_OUT` equals Exchange `TRANSFER_IN`).
-- **Asset Normalization**: Handles case insensitivity and common aliases (e.g., `bitcoin` to `BTC`).
-- **RESTful API**: Triggers runs and generates detailed JSON and CSV reconciliation reports.
+### 1. Backend (Node.js, Express, MongoDB)
+- **Ingestion Pipeline**: Parses raw CSVs using `csv-parser` and validates the data. Bad rows are flagged and stored (not dropped), maintaining absolute data integrity.
+- **Matching Engine**: Features dynamic time window tolerances and quantity percentage tolerances. Automatically maps perspective-based transaction types (e.g., User `TRANSFER_OUT` equals Exchange `TRANSFER_IN`).
+- **File Handling**: Uploaded files are temporarily stored via `multer` for ingestion and instantly purged from the disk once written to the database.
+- **Zero-Setup Database**: Utilizes `mongodb-memory-server` to automatically spin up a volatile, in-memory MongoDB instance when the server starts. No local MongoDB installation is required!
 
-## Prerequisites
+### 2. Frontend (Next.js, React)
+- **Modern Interface**: Built with Vanilla CSS, featuring a premium dark-mode glassmorphism aesthetic.
+- **Interactive Capabilities**: Users can effortlessly drag-and-drop or select User and Exchange CSV files, tweak matching tolerances, and view visual metrics instantly.
+- **Instant Reporting**: Directly downloads the comprehensive Reconciliation CSV Report immediately after processing.
 
-- Node.js (v18+ recommended)
-- MongoDB is **not** required to be installed locally. The project uses `mongodb-memory-server` to automatically spin up an in-memory database for frictionless testing.
+---
 
-## Setup & Running
+## Getting Started
 
-1. **Install Dependencies**
-   ```bash
-   npm install
-   ```
+### Prerequisites
+- **Node.js** (v18 or higher recommended)
+- *(MongoDB is **not** required locally)*
 
-2. **Start the Server**
-   ```bash
-   npm start
-   ```
-   The server will start on `http://localhost:3000`.
+### Setup Instructions
 
-## API Endpoints
+You will need to run the backend and the frontend simultaneously in two separate terminal windows.
 
-### 1. Trigger Reconciliation
-**POST** `/reconcile`
-```json
-// Optional Request Body
-{
-  "timeToleranceMins": 5,
-  "quantityTolerancePercent": 0.01
-}
-```
-**Response**
-```json
-{
-  "message": "Reconciliation completed successfully",
-  "runId": "uuid-v4-string",
-  "summary": { "matched": 21, "conflicting": 1, "unmatchedUser": 4, "unmatchedExchange": 3 }
-}
+#### 1. Start the Backend API
+Open your first terminal window, navigate to the project root, and run:
+```bash
+# Install backend dependencies
+npm install
+
+# Start the Express server (Runs on Port 3000)
+npm start
 ```
 
-### 2. Fetch Full Report (CSV Export)
-**GET** `/report/:runId`
-Downloads the detailed reconciliation report as a CSV file. Includes reasons for matching/conflicting/unmatched.
+#### 2. Start the Frontend UI
+Open a second terminal window, navigate to the `frontend/` directory, and run:
+```bash
+cd frontend
 
-### 3. Fetch Summary
-**GET** `/report/:runId/summary`
-Returns the JSON summary counts of the run.
+# Install frontend dependencies
+npm install
 
-### 4. Fetch Unmatched Rows
-**GET** `/report/:runId/unmatched`
-Returns all unmatched rows (from both User and Exchange sources) in JSON format.
+# Start the Next.js development server (Runs on Port 3001)
+npm run dev -- -p 3001
+```
 
-## System Design & Key Decisions
+#### 3. Access the Application
+Open your browser and navigate to: **http://localhost:3001**
 
-- **Database Choice**: MongoDB (Mongoose) was chosen because transaction data, especially with data quality issues, can be highly variable. The unstructured nature of NoSQL is perfect for keeping `originalRow` data intact.
-- **Zero-Setup Database**: Used `mongodb-memory-server` to allow reviewers to pull and run the code immediately without setting up a database instance.
-- **Validation Strategy**: Standard Mongoose schemas often enforce strict validation (throwing errors and aborting inserts). Because the requirements specified "do not silently drop bad rows", validation logic was moved to the `IngestionService`. The Mongoose schema fields were made optional so bad rows are still persisted but flagged with `isValid: false` and a list of `issues`.
-- **Matching Heuristics**: The matching engine pairs `TRANSFER_OUT` with `TRANSFER_IN`. It also skips matching transactions via time-window heuristics if their timestamps are malformed, categorizing them as `UNMATCHED_USER` with the specific reason (e.g., "Data quality issue: missing timestamp").
+---
 
-## Project Structure
-- `src/config/db.js`: In-memory MongoDB initialization.
-- `src/controllers/reconciliationController.js`: Express route handlers.
-- `src/models/`: Mongoose schemas (`Transaction`, `ReconciliationRun`, `ReconciliationResult`).
-- `src/services/`: Core logic (`IngestionService.js` and `MatchingEngineService.js`).
-- `src/routes/`: Express router definitions.
+## API Endpoints Reference
+
+If you prefer using `curl` or Postman, the backend exposes the following REST endpoints on `http://localhost:3000`:
+
+- **`POST /reconcile`**: Accepts `multipart/form-data` containing `userFile`, `exchangeFile`, `timeToleranceMins`, and `quantityTolerancePercent`. Triggers the engine and returns a summary.
+- **`GET /report/:runId`**: Streams the generated reconciliation report as a downloadable CSV.
+- **`GET /report/:runId/summary`**: Returns the summary counts of the run in JSON format.
+- **`GET /report/:runId/unmatched`**: Returns details for all unmatched rows.
+
+---
+
+## Key Design Decisions
+
+- **Handling Bad Data**: The assignment explicitly requested not to drop bad data. This was solved by migrating standard strict Mongoose validations into a custom `IngestionService`. Invalid rows are written to MongoDB with an `isValid: false` flag and an array detailing their `issues`.
+- **ES Modules**: The entire backend was refactored to use standard ES Modules (`import`/`export`) for modern, future-proof JavaScript compliance.
+- **File Cleanup**: Uploaded CSV files are passed cleanly to the ingestion streams and instantly unlinked via `fs.unlinkSync()` to prevent server bloat.
