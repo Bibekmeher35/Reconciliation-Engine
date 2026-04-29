@@ -37,7 +37,7 @@ export default function Home() {
     formData.append('quantityTolerancePercent', quantityTolerance);
 
     try {
-      const response = await fetch('http://localhost:3000/reconcile', {
+      const response = await fetch('https://reconciliation-api-cwle.onrender.com/reconcile', {
         method: 'POST',
         body: formData,
       });
@@ -59,7 +59,7 @@ export default function Home() {
   const handleDownload = () => {
     if (!result?.runId) return;
     // Just trigger a download via a hidden link
-    window.location.href = `http://localhost:3000/report/${result.runId}`;
+    window.location.href = `https://reconciliation-api-cwle.onrender.com/report/${result.runId}`;
   };
 
   return (
