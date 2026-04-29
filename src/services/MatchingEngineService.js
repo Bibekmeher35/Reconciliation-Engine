@@ -1,6 +1,6 @@
-const Transaction = require('../models/Transaction');
-const ReconciliationResult = require('../models/ReconciliationResult');
-const ReconciliationRun = require('../models/ReconciliationRun');
+import Transaction from '../models/Transaction.js';
+import ReconciliationResult from '../models/ReconciliationResult.js';
+import ReconciliationRun from '../models/ReconciliationRun.js';
 
 class MatchingEngineService {
   static getTypeEquivalent(type) {
@@ -147,4 +147,4 @@ class MatchingEngineService {
   }
 }
 
-module.exports = MatchingEngineService;
+export default MatchingEngineService;

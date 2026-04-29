@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const transactionSchema = new mongoose.Schema({
   source: {
@@ -58,4 +58,4 @@ const transactionSchema = new mongoose.Schema({
 // Create compound index for fast querying during matching
 transactionSchema.index({ runId: 1, source: 1, asset: 1, type: 1 });
 
-module.exports = mongoose.model('Transaction', transactionSchema);
+export default mongoose.model('Transaction', transactionSchema);

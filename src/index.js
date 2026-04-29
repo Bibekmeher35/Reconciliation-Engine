@@ -1,6 +1,6 @@
-const express = require('express');
-const { connectDB } = require('./config/db');
-const reconciliationRoutes = require('./routes/reconciliationRoutes');
+import express from 'express';
+import { connectDB } from './config/db.js';
+import reconciliationRoutes from './routes/reconciliationRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;

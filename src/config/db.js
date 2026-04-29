@@ -1,13 +1,19 @@
-const mongoose = require('mongoose');
-const { MongoMemoryServer } = require('mongodb-memory-server');
+import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
 
 let mongoServer;
 
-const connectDB = async () => {
+/**
+ * Initializes and connects to an in-memory MongoDB instance.
+ * This is useful for zero-setup execution and testing.
+ */
+export const connectDB = async () => {
   try {
+    // Spin up the in-memory mongodb instance
     mongoServer = await MongoMemoryServer.create();
     const uri = mongoServer.getUri();
     
+    // Connect mongoose to the in-memory URI
     await mongoose.connect(uri);
     console.log(`MongoDB successfully connected to in-memory server: ${uri}`);
   } catch (error) {
@@ -16,7 +22,10 @@ const connectDB = async () => {
   }
 };
 
-const disconnectDB = async () => {
+/**
+ * Disconnects from the database and stops the in-memory server.
+ */
+export const disconnectDB = async () => {
   if (mongoose.connection) {
     await mongoose.connection.close();
   }
@@ -24,5 +33,3 @@ const disconnectDB = async () => {
     await mongoServer.stop();
   }
 };
-
-module.exports = { connectDB, disconnectDB };

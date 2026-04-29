@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const reconciliationResultSchema = new mongoose.Schema({
   runId: {
@@ -37,4 +37,4 @@ const reconciliationResultSchema = new mongoose.Schema({
 
 reconciliationResultSchema.index({ runId: 1, category: 1 });
 
-module.exports = mongoose.model('ReconciliationResult', reconciliationResultSchema);
+export default mongoose.model('ReconciliationResult', reconciliationResultSchema);

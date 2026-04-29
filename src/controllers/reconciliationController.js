@@ -1,16 +1,16 @@
-const { v4: uuidv4 } = require('uuid');
-const path = require('path');
-const { createObjectCsvStringifier } = require('csv-writer');
-const ReconciliationRun = require('../models/ReconciliationRun');
-const ReconciliationResult = require('../models/ReconciliationResult');
-const IngestionService = require('../services/IngestionService');
-const MatchingEngineService = require('../services/MatchingEngineService');
+import { v4 as uuidv4 } from 'uuid';
+import path from 'path';
+import { createObjectCsvStringifier } from 'csv-writer';
+import ReconciliationRun from '../models/ReconciliationRun.js';
+import ReconciliationResult from '../models/ReconciliationResult.js';
+import IngestionService from '../services/IngestionService.js';
+import MatchingEngineService from '../services/MatchingEngineService.js';
 
 // Hardcoded paths for the assignment, assuming they run from project root
-const USER_CSV_PATH = path.join(__dirname, '../../user_transactions.csv');
-const EXCHANGE_CSV_PATH = path.join(__dirname, '../../exchange_transactions.csv');
+const USER_CSV_PATH = path.join(import.meta.dirname, '../../user_transactions.csv');
+const EXCHANGE_CSV_PATH = path.join(import.meta.dirname, '../../exchange_transactions.csv');
 
-exports.triggerReconciliation = async (req, res) => {
+export const triggerReconciliation = async (req, res) => {
   try {
     const { timeToleranceMins = 5, quantityTolerancePercent = 0.01 } = req.body;
     const runId = uuidv4();
@@ -38,7 +38,7 @@ exports.triggerReconciliation = async (req, res) => {
   }
 };
 
-exports.getReportCsv = async (req, res) => {
+export const getReportCsv = async (req, res) => {
   try {
     const { runId } = req.params;
     const results = await ReconciliationResult.find({ runId }).lean();
@@ -94,7 +94,7 @@ exports.getReportCsv = async (req, res) => {
   }
 };
 
-exports.getSummary = async (req, res) => {
+export const getSummary = async (req, res) => {
   try {
     const { runId } = req.params;
     const run = await ReconciliationRun.findOne({ runId }).lean();
@@ -110,7 +110,7 @@ exports.getSummary = async (req, res) => {
   }
 };
 
-exports.getUnmatched = async (req, res) => {
+export const getUnmatched = async (req, res) => {
   try {
     const { runId } = req.params;
     const unmatched = await ReconciliationResult.find({

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const reconciliationRunSchema = new mongoose.Schema({
   runId: {
@@ -18,4 +18,4 @@ const reconciliationRunSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
-module.exports = mongoose.model('ReconciliationRun', reconciliationRunSchema);
+export default mongoose.model('ReconciliationRun', reconciliationRunSchema);

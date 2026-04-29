@@ -1,6 +1,6 @@
-const fs = require('fs');
-const csv = require('csv-parser');
-const Transaction = require('../models/Transaction');
+import fs from 'fs';
+import csv from 'csv-parser';
+import Transaction from '../models/Transaction.js';
 
 class IngestionService {
   /**
@@ -127,4 +127,4 @@ class IngestionService {
   }
 }
 
-module.exports = IngestionService;
+export default IngestionService;
